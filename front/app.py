@@ -34,4 +34,4 @@ while True:
 
         st.bokeh_chart(p, use_container_width=True)
 
-    time.sleep(1)
+    time.sleep(10000)
