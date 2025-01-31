@@ -3,3 +3,4 @@ requests>=2.32.3
 pandas>=2.2.3
 numpy<2.0.0
 bokeh==2.4.3
+heartpy>=1.2.7
