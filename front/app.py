@@ -60,4 +60,4 @@ while True:
         st.write('heart rate is: %s BPM' %measures['bpm'])
         st.bokeh_chart(p, use_container_width=True)
 
-    time.sleep(10000)
+    time.sleep(1)
