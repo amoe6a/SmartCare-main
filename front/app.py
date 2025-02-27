@@ -16,18 +16,20 @@ st.title('Real-Time ECG readings from AD8232 sensor on ESP32 board')
 
 DATE_COLUMN = 'date_created'
 DATA_URL = ("https://smartcare-main-production.up.railway.app/sensors/1")
+DATA_URL_ANN = "https://smartcare-main-production.up.railway.app/annotations"
 SAMPLING_RATE = 100
 
 # @st.cache_data
 def load_data(nrows):
     json_data = requests.get(DATA_URL).json()
+    annot_data = requests.get(DATA_URL_ANN).json()
     data = pd.DataFrame(json_data)
-    return data.tail(nrows)
+    return data.tail(nrows), annot_data
 
 placeholder = st.empty()
 
 while True:
-    data = load_data(1000)
+    data, annot_data = load_data(1000)
     sd = [float(each) for each in data["reading_value"]]
     sdf = np.array(sd).flatten()
 
@@ -58,6 +60,8 @@ while True:
 
         st.write('breathing rate is: %s Hz' %measures['breathingrate'])
         st.write('heart rate is: %s BPM' %measures['bpm'])
+        st.write('last_annotations: ')
+        st.write(annot_data)
         st.bokeh_chart(p, use_container_width=True)
 
     time.sleep(1000)

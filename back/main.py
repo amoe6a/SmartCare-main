@@ -48,6 +48,10 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 app = FastAPI()
 
+# signals are dumped by 256 signal at a time, with 400Hz sampling rate. Count to 16 to get 4096 signals
+signal_dumps_count = 0
+
+last_annotations = []
 
 @app.on_event("startup")
 def on_startup():
@@ -80,6 +84,10 @@ def add_sensor_readings(sensor_id: int, readings: List[SensorReading], session: 
         reading.date_created = datetime.now()
         session.add(reading)
     session.commit()
+    signal_dumps_count += 1
+    if signal_dumps_count == 16:
+        signal_dumps_count = 0
+        # process the 4096 signals
     return {"ok": True}
 
 # use mysql documentation. write a query to get all sensor readings for a sensor with a given id
@@ -91,6 +99,33 @@ def read_sensor_readings(sensor_id: int, session: SessionDep):
     readings = session.exec(select(SensorReading).where(SensorReading.sensor_id == sensor_id)).all()
     return readings
 
+# use mysql documentation. write a GET query to get the last 4096 samples from the sensor readings.
+# Wait for the response to be ready before sending the next GET request
+@app.get("/sensors/{sensor_id}/last4096")
+def read_sensor_last4096(sensor_id: int, session: SessionDep):
+    sensor = session.get(Sensor, sensor_id)
+    if not sensor:
+        raise HTTPException(status_code=404, detail="Sensor not found")
+    readings = session.exec(select(SensorReading).where(SensorReading.sensor_id == sensor_id).order_by(SensorReading.date_created.desc()).limit(4096)).all()
+    while signal_dumps_count != 0:
+        pass
+    return readings
+
+# use mysql documentation. write a POST query that will update the last_annotations variable with the annotations
+# that are sent in the request body
+@app.post("/annotations/")
+def update_annotations(annotations: str):
+    last_annotations.append(annotations)
+    if len(last_annotations) >= 10:
+        last_annotations.pop(0)
+    return {"ok": True}
+
+
+# # use mysql documentation. write a get query to get the last_annotations variable
+# # and return it as a response
+@app.get("/annotations/")
+def get_annotations():
+    return last_annotations
 
 # @app.delete("/heroes/{hero_id}")
 # def delete_hero(hero_id: int, session: SessionDep):
