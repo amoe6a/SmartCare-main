@@ -4,6 +4,9 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlmodel import Field, Session, SQLModel, create_engine, select, Relationship
 from datetime import datetime
 
+from pydantic import BaseModel
+from contextlib import asynccontextmanager
+
 
 # class Hero(SQLModel, table=True):
 #     id: int | None = Field(default=None, primary_key=True)
@@ -46,16 +49,23 @@ def get_session():
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
+
+app = FastAPI(lifespan=lifespan)
 
 # signals are dumped by 256 signal at a time, with 400Hz sampling rate. Count to 16 to get 4096 signals
 signal_dumps_count = 0
 
 last_annotations = []
 
-@app.on_event("startup")
-def on_startup():
-    create_db_and_tables()
+
+
+# @app.on_event("startup")
+# def on_startup():
+#     create_db_and_tables()
 
 @app.post("/sensors/")
 def create_sensor(sensor: Sensor, session: SessionDep) -> Sensor:
@@ -111,15 +121,22 @@ def read_sensor_last4096(sensor_id: int, session: SessionDep):
         pass
     return readings
 
+class OutputML(BaseModel):
+    anns: List[str]
+
+
 # use mysql documentation. write a POST query that will update the last_annotations variable with the annotations
 # that are sent in the request body
 @app.post("/annotations/")
-def update_annotations(annotations: str):
-    last_annotations.append(annotations)
+def update_annotations(outputs: OutputML):
+    last_annotations.append(outputs.anns)
     if len(last_annotations) >= 10:
         last_annotations.pop(0)
     return {"ok": True}
 
+# {
+#   "msg": ["0.23", "0.434", "0.87", "0.45", "0.433", "0.256"]
+# }
 
 # # use mysql documentation. write a get query to get the last_annotations variable
 # # and return it as a response
