@@ -64,5 +64,5 @@ while True:
         st.write(annot_data)
         st.bokeh_chart(p, use_container_width=True)
 
-    time.sleep(1000)
+    time.sleep(10)
     
