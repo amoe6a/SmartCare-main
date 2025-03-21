@@ -20,7 +20,7 @@ DATA_URL_ANN = "https://smartcare-main-production.up.railway.app/annotations"
 SAMPLING_RATE = 100
 
 # @st.cache_data
-def !load_data(nrows):
+def load_data(nrows):
     json_data = requests.get(DATA_URL).json()
     annot_data = requests.get(DATA_URL_ANN).json()
     data = pd.DataFrame(json_data)
