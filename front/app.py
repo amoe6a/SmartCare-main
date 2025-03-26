@@ -29,7 +29,7 @@ def load_data(nrows):
 placeholder = st.empty()
 
 while True:
-    data, annot_data = load_data(1000)
+    data, annot_data = load_data(4096)
     sd = [float(each) for each in data["reading_value"]]
     sdf = np.array(sd).flatten()
 
