@@ -15,7 +15,7 @@ st.set_page_config(
 st.title('Real-Time ECG readings from AD8232 sensor on ESP32 board')
 
 DATE_COLUMN = 'date_created'
-DATA_URL = ("https://smartcare-main-production.up.railway.app/sensors/1")
+DATA_URL = ("https://smartcare-main-production.up.railway.app/sensors/1/last4096")
 DATA_URL_ANN = "https://smartcare-main-production.up.railway.app/annotations"
 SAMPLING_RATE = 100
 
