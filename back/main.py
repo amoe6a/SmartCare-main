@@ -30,6 +30,15 @@ class SensorReading(SQLModel, table=True):  # `table=True` makes this a database
     # Establish relationship with Sensor
     sensor: Sensor = Relationship(back_populates="readings")
 
+class SensorReadingProcessed(SQLModel, table=True):  # `table=True` makes this a database table
+    id: Optional[int] = Field(default=None, primary_key=True)
+    sensor_id: int = Field(foreign_key="sensor.id", nullable=False)
+    date_created: Optional[datetime] = Field(default=None)
+    reading_value: Optional[str] = Field(max_length=255, default=None)
+
+    # Establish relationship with Sensor
+    sensor: Sensor = Relationship(back_populates="readings")
+
 strtime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 sqlite_file_name = strtime + ".db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
@@ -120,6 +129,32 @@ def read_sensor_last4096(sensor_id: int, session: SessionDep):
     while signal_dumps_count != 0:
         pass
     return readings
+
+# use mysql documentation. write a POST query to upload the data to the SensorReadingProcessed table
+@app.post("/sensors/{sensor_id}/processed")
+def upload_processed_data(sensor_id: int, readings: List[SensorReadingProcessed], session: SessionDep):
+    sensor = session.get(Sensor, sensor_id)
+    if not sensor:
+        raise HTTPException(status_code=404, detail="Sensor not found")
+    for reading in readings:
+        reading.sensor_id = sensor_id
+        reading.date_created = datetime.now()
+        session.add(reading)
+    session.commit()
+    return {"ok": True}
+
+# use mysql documentation. write a GET query to get the last 4096 samples from the processed sensor readings.
+# Wait for the response to be ready before sending the next GET request
+@app.get("/sensors/{sensor_id}/processed/last4096")
+def read_sensor_last4096_processed(sensor_id: int, session: SessionDep):
+    sensor = session.get(Sensor, sensor_id)
+    if not sensor:
+        raise HTTPException(status_code=404, detail="Sensor not found")
+    readings = session.exec(select(SensorReadingProcessed).where(SensorReadingProcessed.sensor_id == sensor_id).order_by(SensorReadingProcessed.date_created.desc()).limit(4096)).all()
+    while signal_dumps_count != 0:
+        pass
+    return readings
+
 
 class OutputML(BaseModel):
     anns: List[str]
