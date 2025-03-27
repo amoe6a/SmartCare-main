@@ -21,6 +21,9 @@ class Sensor(SQLModel, table=True):  # `table=True` makes this a database table
     # Establish relationship with SensorReading
     readings: List["SensorReading"] = Relationship(back_populates="sensor")
 
+    # Establish relationship with SensorReadingProcessed
+    readings_processed: List["SensorReadingProcessed"] = Relationship(back_populates="sensor")
+
 class SensorReading(SQLModel, table=True):  # `table=True` makes this a database table
     id: Optional[int] = Field(default=None, primary_key=True)
     sensor_id: int = Field(foreign_key="sensor.id", nullable=False)
@@ -37,7 +40,7 @@ class SensorReadingProcessed(SQLModel, table=True):  # `table=True` makes this a
     reading_value: Optional[str] = Field(max_length=255, default=None)
 
     # Establish relationship with Sensor
-    sensor: Sensor = Relationship(back_populates="readings")
+    sensor: Sensor = Relationship(back_populates="readings_processed")
 
 strtime = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 sqlite_file_name = strtime + ".db"
