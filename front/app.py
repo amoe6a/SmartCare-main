@@ -32,7 +32,7 @@ def load_data(nrows):
 
 placeholder = st.empty()
 
-while True:
+!while True:
     data, data_processed, annot_data = load_data(4096)
     sd = [float(each) for each in data["reading_value"]]
     sd_processed = [float(each) for each in data_processed["reading_value"]]
